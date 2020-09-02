@@ -7,17 +7,59 @@
     <title>Document</title>
   </head>
   <body>
-    <div id="app">
-      <h1>{{ msg }}</h1>
+    <div @dd="aaa" id="app">
+      <h1>msg: {{ msg }}</h1>
+      <div>fullName: {{ fullName }}</div>
+      <div>obj.a: {{ obj.a }}</div>
+      <button @click="aaa">aaa</button>
+      <comp @zi="aaa" />
     </div>
   </body>
   <script src="../dist/vue.js"></script>
   <script>
-    new Vue({
+
+    let Comp = {
+      data() {
+        return {
+          zi: '子组件'
+        }
+      },
+      template: '<div>{{zi}}</div>'
+    }
+
+
+    let vm = new Vue({
       el: '#app',
       data: {
-        msg: 'hello word'
+        msg: 'hello',
+      },
+      components: {Comp},
+     
+      computed: {
+        fullName: {
+          get: function () {
+            return this.msg + 'dongaifeng'
+          },
+          
+          set: function (newValue) {
+            console.log(newValue)
+            debugger
+            this.msg = newValue+ '.....' 
+          }
+        }
+      },
+
+      mounted(){
+        console.log('mounted')
+        console.log(this._data.__ob__)
+      },
+      methods: {
+        aaa(){
+          this.fullName = '董爱疯'
+          console.log(this)
+        }
       }
     });
+    console.log(vm)
   </script>
 </html>

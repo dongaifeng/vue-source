@@ -13,6 +13,7 @@ import { extend, mergeOptions, formatComponentName } from '../util/index'
 let uid = 0
 
 export function initMixin (Vue: Class<Component>) {
+  // !!!5 _init 方法
   Vue.prototype._init = function (options?: Object) {
     const vm: Component = this
     // 为Vue定义uid定义一个id
@@ -34,7 +35,7 @@ export function initMixin (Vue: Class<Component>) {
       // since dynamic options merging is pretty slow, and none of the
       // internal component options needs special treatment.
 
-      // 优化内部组件实例  每个内部组件选项都要处理 因为动态选项很慢 添加组件用的选项
+// 优化内部组件实例  每个内部组件选项都要处理 因为动态选项很慢 添加组件用的选项
       initInternalComponent(vm, options)
     } else { 
       // 根组件 会去合并选项 添加一些
@@ -54,12 +55,12 @@ export function initMixin (Vue: Class<Component>) {
 
     // 构造函数初始化
     vm._self = vm
-    initLifecycle(vm)
-    initEvents(vm)
-    initRender(vm)
+    initLifecycle(vm)  // $parent,$root,$children,$refs
+    initEvents(vm)   // 处理父组件传递的监听器
+    initRender(vm)  // $slots,$scopedSlots,_c,$createElement
     callHook(vm, 'beforeCreate')
     initInjections(vm) // resolve injections before data/props
-    initState(vm)
+    initState(vm)   // 初始化props，methods，data，computed，watch 这里面又是一堆init
     initProvide(vm) // resolve provide after data/props
     callHook(vm, 'created')
 
@@ -71,6 +72,7 @@ export function initMixin (Vue: Class<Component>) {
     }
 
     if (vm.$options.el) {
+      // !!!6 $mount 被调用 ， 是entry-runtime-with-complier中的那个
       vm.$mount(vm.$options.el)
     }
   }

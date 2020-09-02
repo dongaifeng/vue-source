@@ -16,6 +16,9 @@ import VNode, { createEmptyVNode } from '../vdom/vnode'
 
 import { isUpdatingChildComponent } from './lifecycle'
 
+// 定义 _c $createElement
+// 定义 $attrs 来自 vm.$vnode或者$options._parentVnode
+// 定义 $listeners $options._parentListeners
 export function initRender (vm: Component) {
   vm._vnode = null // the root of the child tree
   vm._staticTrees = null // v-once cached trees
@@ -65,7 +68,7 @@ export function renderMixin (Vue: Class<Component>) {
   Vue.prototype.$nextTick = function (fn: Function) {
     return nextTick(fn, this)
   }
-
+// !!!8 _render定义，在updateComponent里调用
   Vue.prototype._render = function (): VNode {
     const vm: Component = this
     const { render, _parentVnode } = vm.$options
@@ -81,7 +84,7 @@ export function renderMixin (Vue: Class<Component>) {
     // set parent vnode. this allows render functions to have access
     // to the data on the placeholder node.
 
-    // 设置$node 把parentNode赋值给他  也就是说当前组件的$node就是父组件
+    // 设置$node 把parentNode赋值给他  也就是说当前组件的$vnode就是父组件
     vm.$vnode = _parentVnode
     // render self
     let vnode
@@ -90,6 +93,7 @@ export function renderMixin (Vue: Class<Component>) {
       // separately from one another. Nested component's render fns are called
       // when parent component is patched.
       currentRenderingInstance = vm
+      // 主要代码： 调用vm上的 render 函数 生成虚拟dom
       vnode = render.call(vm._renderProxy, vm.$createElement)
     } catch (e) {
       handleError(e, vm, `render`)

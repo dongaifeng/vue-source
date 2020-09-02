@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app">
+      <h1>{{ msg }}</h1>
+      <comp hello="aaa" class="box" :myprop="msg" @eve="aaa">
+        组件的slot
+      </comp>
+    </div>
+  </body>
+  <script src="../dist/vue.js"></script>
+  <script>
+    const comp = {
+      template: '<p><a>{{myprop}}</a><button @click="compClick">子组件更改props</button></p>',
+      mounted(){
+        console.log('子组件', this)
+      },
+      props: ['myprop'],
+      methods:{
+        compClick(){ this.myprop.name = '子组件改变props'}
+      }
+    }
+
+
+    let vm = new Vue({
+      el: '#app',
+      components: { comp },
+      data: {
+        msg: {
+          name: 'hello word'
+        }
+      },
+      computed: {
+        parentMsg() {
+          return this.msg + '!!!'
+        }
+      },
+      mounted() {
+        this.$on('myevent2', this.aaa)
+      },
+      methods: {
+        aaa(){
+          this.msg = this.msg + '你好'
+        },
+        compClick(){
+          alert()
+        },
+        bbb(e) {
+          console.log(e)
+        }
+      }
+    });
+    console.log('vm--->', vm)
+  </script>
+</html>

@@ -15,7 +15,7 @@ export default class Dep {
   id: number;
   subs: Array<Watcher>;
 
-  constructor () {
+   constructor () {
     this.id = uid++
     this.subs = []
   }
@@ -28,6 +28,7 @@ export default class Dep {
     remove(this.subs, sub)
   }
 
+  //!!!c 这里又绕回到页面的watcher.addDep
   depend () {
     if (Dep.target) {
       Dep.target.addDep(this)

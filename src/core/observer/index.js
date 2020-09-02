@@ -43,7 +43,7 @@ export class Observer {
     this.value = value
     this.dep = new Dep()
     this.vmCount = 0
-    def(value, '__ob__', this)
+    def(value, '__ob__', this) // 在value上定义 __ob__ 用defineProperty 并设置 值为this
     if (Array.isArray(value)) {
       if (hasProto) {
         protoAugment(value, arrayMethods)
@@ -132,6 +132,7 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
 /**
  * Define a reactive property on an Object.
  */
+// !!!9 defineReactive 响应式函数
 export function defineReactive (
   obj: Object,
   key: string,
@@ -141,6 +142,8 @@ export function defineReactive (
 ) {
   const dep = new Dep()
 
+  // 获取 属性(key) 原生的 属性描述符
+  // 如果不可修改 直接return
   const property = Object.getOwnPropertyDescriptor(obj, key)
   if (property && property.configurable === false) {
     return
@@ -153,7 +156,8 @@ export function defineReactive (
     val = obj[key]
   }
 
-  let childOb = !shallow && observe(val)
+  let childOb = !shallow && observe(val)  //如果不是浅的  说明val 是个对象 就再调用 observe(val) 返回的是  ob = new Observer(value)
+  //!!!10 defineProperty,响应式的精髓
   Object.defineProperty(obj, key, {
     enumerable: true,
     configurable: true,

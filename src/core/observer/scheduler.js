@@ -81,10 +81,16 @@ function flushSchedulerQueue () {
   //    user watchers are created before the render watcher)
   // 3. If a component is destroyed during a parent component's watcher run,
   //    its watchers can be skipped.
+
+//刷新前对队列排序。作用是：
+// 1。组件先更新父级再更新到子级。（因为父组件总是 在子组件之前创建）
+// 2。组件自用的watcher在其render的watcher之前运行（因为 组件自用的watcher在render的watcher之前创建）
+//3。如果某个组件在父组件的watcher运行期间被销毁，它的watcher可以跳过。
   queue.sort((a, b) => a.id - b.id)
 
   // do not cache length because more watchers might be pushed
   // as we run existing watchers
+  // 依次执行watcher 的 before和run
   for (index = 0; index < queue.length; index++) {
     watcher = queue[index]
     if (watcher.before) {
@@ -163,8 +169,15 @@ function callActivatedHooks (queue) {
  */
 export function queueWatcher (watcher: Watcher) {
   const id = watcher.id
+
+  // 判断has 对象中 有无此watcher.id
+ 
   if (has[id] == null) {
     has[id] = true
+
+    // 判断现在是不是正在执行更新
+    // 如果已经运行，队列是已经按watcher.id从大到小排序了。
+    // 使用splice方法把当前watcher插入到它对应id的位置。
     if (!flushing) {
       queue.push(watcher)
     } else {
@@ -184,6 +197,8 @@ export function queueWatcher (watcher: Watcher) {
         flushSchedulerQueue()
         return
       }
+      // 使用 nextTick 异步处理更新
+      //
       nextTick(flushSchedulerQueue)
     }
   }

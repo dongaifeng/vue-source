@@ -61,6 +61,7 @@ export function initState (vm: Component) {
   }
 }
 
+// !!!props 初始化props
 function initProps (vm: Component, propsOptions: Object) {
   const propsData = vm.$options.propsData || {}
   const props = vm._props = {}
@@ -74,6 +75,7 @@ function initProps (vm: Component, propsOptions: Object) {
   }
   for (const key in propsOptions) {
     keys.push(key)
+    // 校验props的值
     const value = validateProp(key, propsOptions, propsData, vm)
     /* istanbul ignore else */
     if (process.env.NODE_ENV !== 'production') {
@@ -102,6 +104,7 @@ function initProps (vm: Component, propsOptions: Object) {
     // static props are already proxied on the component's prototype
     // during Vue.extend(). We only need to proxy props defined at
     // instantiation here.
+    // 代理到Vue实例this上
     if (!(key in vm)) {
       proxy(vm, `_props`, key)
     }
@@ -111,6 +114,7 @@ function initProps (vm: Component, propsOptions: Object) {
 
 function initData (vm: Component) {
   let data = vm.$options.data
+  // 判断 data是函数 还是对象
   data = vm._data = typeof data === 'function'
     ? getData(data, vm)
     : data || {}
@@ -144,6 +148,7 @@ function initData (vm: Component) {
         vm
       )
     } else if (!isReserved(key)) {
+      // 当访问this.name 属性时 代理到this._data
       proxy(vm, `_data`, key)
     }
   }
@@ -166,8 +171,11 @@ export function getData (data: Function, vm: Component): any {
 
 const computedWatcherOptions = { lazy: true }
 
+//!!!c 初始化计算属性
 function initComputed (vm: Component, computed: Object) {
+  
   // $flow-disable-line
+  // 在vm实例上保存computedWatchers
   const watchers = vm._computedWatchers = Object.create(null)
   // computed properties are just getters during SSR
   const isSSR = isServerRendering()
@@ -183,6 +191,7 @@ function initComputed (vm: Component, computed: Object) {
     }
 
     if (!isSSR) {
+      //!!!c 给每个计算属性生成一个watcher(注意key), 在Watcher构造函数中会根据 lazy 生成computed_watcher
       // create internal watcher for the computed property.
       watchers[key] = new Watcher(
         vm,
@@ -196,7 +205,7 @@ function initComputed (vm: Component, computed: Object) {
     // component prototype. We only need to define computed properties defined
     // at instantiation here.
     if (!(key in vm)) {
-      defineComputed(vm, key, userDef)
+      defineComputed(vm, key, userDef) //!!!c  定义计算属性的 get set
     } else if (process.env.NODE_ENV !== 'production') {
       if (key in vm.$data) {
         warn(`The computed property "${key}" is already defined in data.`, vm)
@@ -215,13 +224,13 @@ export function defineComputed (
   const shouldCache = !isServerRendering()
   if (typeof userDef === 'function') {
     sharedPropertyDefinition.get = shouldCache
-      ? createComputedGetter(key)
+      ? createComputedGetter(key)  //!!!c 定义get
       : createGetterInvoker(userDef)
     sharedPropertyDefinition.set = noop
   } else {
     sharedPropertyDefinition.get = userDef.get
       ? shouldCache && userDef.cache !== false
-        ? createComputedGetter(key)
+        ? createComputedGetter(key) 
         : createGetterInvoker(userDef.get)
       : noop
     sharedPropertyDefinition.set = userDef.set || noop
@@ -235,16 +244,22 @@ export function defineComputed (
       )
     }
   }
+  //!!!c  调用 defineProperty  实现响应式
   Object.defineProperty(target, key, sharedPropertyDefinition)
 }
 
 function createComputedGetter (key) {
   return function computedGetter () {
     const watcher = this._computedWatchers && this._computedWatchers[key]
+    //!!!c  在计算属性被使用时 会触发这个函数 也就是get  
+    //!!!c  这里通过key 获取到对应的 _computedWatcher  根据 watcher.dirty 决定 value使用的是缓存的还是 重新计算
     if (watcher) {
       if (watcher.dirty) {
         watcher.evaluate()
       }
+      //!!!c  此时Dep.target就是当前页面的watcher，这里是让 data的属性(computed的依赖项) 收集 当前页面的watcher，也就是__ob__下面的dep 下面的subs中
+      //!!!c  这样data的subs中 就有了 页面的watcher，computed的watcher
+      //!!!c  这样data的数据改变 会直接分别通知 页面的watcher，computed的watcher
       if (Dep.target) {
         watcher.depend()
       }

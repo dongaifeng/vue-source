@@ -42,6 +42,7 @@ const componentVNodeHooks = {
     ) {
       // kept-alive components, treat as a patch
       const mountedNode: any = vnode // work around flow
+      // !!!props 更新子组件从父组件传来的数据
       componentVNodeHooks.prepatch(mountedNode, mountedNode)
     } else {
       const child = vnode.componentInstance = createComponentInstanceForVnode(
@@ -51,7 +52,7 @@ const componentVNodeHooks = {
       child.$mount(hydrating ? vnode.elm : undefined, hydrating)
     }
   },
-
+  // !!!props 用于更新子组件数据 props，listener
   prepatch (oldVnode: MountedComponentVNode, vnode: MountedComponentVNode) {
     const options = vnode.componentOptions
     const child = vnode.componentInstance = oldVnode.componentInstance
@@ -126,6 +127,7 @@ export function createComponent (
   }
 
   // async component
+  // 异步组件处理
   let asyncFactory
   if (isUndef(Ctor.cid)) {
     asyncFactory = Ctor
@@ -156,6 +158,7 @@ export function createComponent (
   }
 
   // extract props
+  // !!!props 把 props 从data里面检出来，生成vnode的时候会挂在到 componentOptions 上
   const propsData = extractPropsFromVNodeData(data, Ctor, tag)
 
   // functional component

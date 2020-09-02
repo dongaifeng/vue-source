@@ -15,7 +15,7 @@ const idToTemplate = cached(id => {
 })
 
 
-// ddd1 获取$mount方法  并重写$mount方法
+// !!!1 获取$mount方法  并重写$mount方法
 const mount = Vue.prototype.$mount
 Vue.prototype.$mount = function (
   el?: string | Element,
@@ -23,6 +23,7 @@ Vue.prototype.$mount = function (
 ): Component {
   el = el && query(el)  // 查找el
 
+  // istanbul ignore if这种字段先不看 测试 兼容用的
   /* istanbul ignore if */
   if (el === document.body || el === document.documentElement) {
     process.env.NODE_ENV !== 'production' && warn(
@@ -43,7 +44,7 @@ Vue.prototype.$mount = function (
     if (template) {
       if (typeof template === 'string') {
         if (template.charAt(0) === '#') {
-          template = idToTemplate(template)
+          template = idToTemplate(template)  // # 表示是id  把 id  变成 template
           /* istanbul ignore if */
           if (process.env.NODE_ENV !== 'production' && !template) {
             warn(
@@ -60,7 +61,7 @@ Vue.prototype.$mount = function (
         }
         return this
       }
-    } else if (el) {
+    } else if (el) {  // 判断没有template 后 判断有el  就用el方式去处理模板 
       template = getOuterHTML(el)
     }
     if (template) {
@@ -68,7 +69,9 @@ Vue.prototype.$mount = function (
       if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
         mark('compile')
       }
-//  直接到这里  template编译成render函数
+
+// !!!2 template在上边生成（类似html代码） 直接到这里  template编译成render函数
+// !!!编译 开始
       const { render, staticRenderFns } = compileToFunctions(template, {
         outputSourceRange: process.env.NODE_ENV !== 'production',
         shouldDecodeNewlines,
@@ -88,6 +91,7 @@ Vue.prototype.$mount = function (
       }
     }
   }
+  // !!!3 再调用刚才被缓存的mount 方法
   return mount.call(this, el, hydrating)
 }
 

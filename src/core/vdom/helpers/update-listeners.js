@@ -68,11 +68,13 @@ export function updateListeners (
       cur = def.handler
       event.params = def.params
     }
+
     if (isUndef(cur)) {
       process.env.NODE_ENV !== 'production' && warn(
         `Invalid handler for event "${event.name}": got ` + String(cur),
         vm
       )
+      // 如果新事件有 老事件没有 就给节点添加事件 add
     } else if (isUndef(old)) {
       if (isUndef(cur.fns)) {
         cur = on[name] = createFnInvoker(cur, vm)
@@ -81,11 +83,13 @@ export function updateListeners (
         cur = on[name] = createOnceHandler(event.name, cur, event.capture)
       }
       add(event.name, cur, event.capture, event.passive, event.params)
+      // 如果老事件 和 新事件不同 就把新事件函数 给 老事件
     } else if (cur !== old) {
       old.fns = cur
       on[name] = old
     }
   }
+  // 遍历老事件对象 如果在新事件对象里没有 就删除此事件
   for (name in oldOn) {
     if (isUndef(on[name])) {
       event = normalizeEvent(name)

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app">
+      <!-- <h1>{{ msg }}</h1>
+      <button @click="aaa" @myevent="bbb">aaa</button> -->
+      <comp :myprop="'hello'" class="myclass" @click.native="aaa" @test="compClick" >
+        组件的slot
+      </comp>
+    </div>
+  </body>
+  <script src="../dist/vue.js"></script>p
+  <script>
+    const comp = {
+      template: '<p><a>按钮</a></p>',
+      mounted(){
+        console.log('子组件', this)
+      },
+      props: ['myprop'],
+      methods:{
+        compClick(){}
+      }
+    }
+
+
+
+
+
+    let vm = new Vue({
+      el: '#app',
+      components: { comp },
+      data: {
+        msg: 'hello word'
+      },
+      mounted() {
+        this.$on('myevent2', this.aaa)
+      },
+      methods: {
+        aaa(){
+          alert()
+        },
+        compClick(){
+          alert()
+        },
+        bbb(e) {
+          console.log(e)
+        }
+      }
+    });
+    console.log('vm--->', vm)
+  </script>
+</html>

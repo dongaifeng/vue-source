@@ -52,6 +52,7 @@ export default class Watcher {
     isRenderWatcher?: boolean
   ) {
     this.vm = vm
+    //!!!c  这里区分时 render——watcher还是 comptued_wathcer
     if (isRenderWatcher) {
       vm._watcher = this
     }
@@ -69,7 +70,8 @@ export default class Watcher {
     this.cb = cb
     this.id = ++uid // uid for batching
     this.active = true
-    this.dirty = this.lazy // for lazy watchers
+    //!!!c dirty 是缓存计算值的开关 true时会计算 false时会读取缓存
+    this.dirty = this.lazy // for lazy watchers  
     this.deps = []
     this.newDeps = []
     this.depIds = new Set()
@@ -78,6 +80,8 @@ export default class Watcher {
       ? expOrFn.toString()
       : ''
     // parse expression for getter
+    //!!!c 把计算属性的get 赋值给 watcher的 getter
+    // !!! 把更新函数 赋值给 getter
     if (typeof expOrFn === 'function') {
       this.getter = expOrFn
     } else {
@@ -92,7 +96,8 @@ export default class Watcher {
         )
       }
     }
-    this.value = this.lazy
+    //!!!c  computed的watcher 这里并不会计算值， render时的watcher会计算值
+    this.value = this.lazy   
       ? undefined
       : this.get()
   }
@@ -102,11 +107,12 @@ export default class Watcher {
    */
   //  收集依赖
   get () {
+    // 在这里把当前watcher 给了 Dep.target
     pushTarget(this)
     let value
     const vm = this.vm
     try {
-      value = this.getter.call(vm, vm)
+      value = this.getter.call(vm, vm) // value可能是比较后的vnode
     } catch (e) {
       if (this.user) {
         handleError(e, vm, `getter for watcher "${this.expression}"`)
@@ -119,6 +125,8 @@ export default class Watcher {
       if (this.deep) {
         traverse(value)
       }
+      // 从targetStack（watcher缓存栈）末尾删除本watcher
+      // 并且设置target 为上一个 watcher 
       popTarget()
       this.cleanupDeps()
     }
@@ -128,6 +136,7 @@ export default class Watcher {
   /**
    * Add a dependency to this directive.
    */
+   //!!!c watcher的 newDeps 添加dep， dep添加当前watcher
   addDep (dep: Dep) {
     const id = dep.id
     if (!this.newDepIds.has(id)) {
@@ -218,6 +227,7 @@ export default class Watcher {
   /**
    * Depend on all deps collected by this watcher.
    */
+   //!!!c watcher.deps存放的是data属性的dep。比如data：{a.b.c}  就会有a的dep  b的dep  c的dep
   depend () {
     let i = this.deps.length
     while (i--) {

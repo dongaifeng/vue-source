@@ -7,9 +7,11 @@ import { isIE, isIOS, isNative } from './env'
 
 export let isUsingMicroTask = false
 
+// 存放异步函数
 const callbacks = []
+// 调用标志
 let pending = false
-
+// 清空callbacks函数的方法，循环执行里面存的异步函数
 function flushCallbacks () {
   pending = false
   const copies = callbacks.slice(0)
@@ -18,6 +20,12 @@ function flushCallbacks () {
     copies[i]()
   }
 }
+
+// 生成timerFunc 
+// 如果平台支持Promise，就用Promise做异步，把函数放到微任务队列里
+// 如果不是IE 而且支持MutationObserver 就用MutationObserver，他是微任务
+// 如果平台支持setImmediate，就用setImmediate，他是宏任务
+// 最后保底的使用setTimeout，他是宏任务
 
 // Here we have async deferring wrappers using microtasks.
 // In 2.5 we used (macro) tasks (in combination with microtasks).
@@ -31,7 +39,6 @@ function flushCallbacks () {
 // sequential events (e.g. #4521, #6690, which have workarounds)
 // or even between bubbling of the same event (#6566).
 let timerFunc
-
 // The nextTick behavior leverages the microtask queue, which can be accessed
 // via either native Promise.then or MutationObserver.
 // MutationObserver has wider support, however it is seriously bugged in
@@ -86,6 +93,9 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
 
 export function nextTick (cb?: Function, ctx?: Object) {
   let _resolve
+  // 把用户传来的函数cb添加进callbacks里
+  // 调用timerFunc函数，因为timerFunc是异步的，会等到所有同步任务执行完再执行
+  // timerFunc里面会调用flushCallbacks
   callbacks.push(() => {
     if (cb) {
       try {

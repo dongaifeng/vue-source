@@ -201,6 +201,7 @@ export function parse (
     }
   }
 
+  // !!!编译 开始编译
   parseHTML(template, {
     warn,
     expectHTML: options.expectHTML,

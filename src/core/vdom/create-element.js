@@ -110,11 +110,15 @@ export function _createElement (
       )
     } else if ((!data || !data.pre) && isDef(Ctor = resolveAsset(context.$options, 'components', tag))) {
       // component
+      // !!! component 如果是组件 生成组件 vnode
+      // Ctor 是从父组件选项上拿到 对应的组件的选项
       vnode = createComponent(Ctor, data, context, children, tag)
     } else {
       // unknown or unlisted namespaced elements
       // check at runtime because it may get assigned a namespace when its
       // parent normalizes children
+
+      // !!! component 如果是标签 创建 标签 vnode
       vnode = new VNode(
         tag, data, children,
         undefined, undefined, context

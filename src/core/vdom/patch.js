@@ -20,12 +20,12 @@ import { isTextInputType } from 'web/util/element'
 
 import {
   warn,
-  isDef,
-  isUndef,
-  isTrue,
+  isDef,  // 是定义吗
+  isUndef, // 是未定义吗
+  isTrue,  // 是true
   makeMap,
-  isRegExp,
-  isPrimitive
+  isRegExp, // 是正则
+  isPrimitive // 是基本数据类型
 } from '../util/index'
 
 export const emptyNode = new VNode('', {}, [])
@@ -122,6 +122,8 @@ export function createPatchFunction (backend) {
 
   let creatingElmInVPre = 0
 
+  // 根据 Vnode 生成 真实的节点
+  // 这里 会区分 标签 还是 组件
   function createElm (
     vnode,
     insertedVnodeQueue,
@@ -141,6 +143,8 @@ export function createPatchFunction (backend) {
     }
 
     vnode.isRootInsert = !nested // for transition enter check
+    // !!!component 判断本节点是组件还是标签
+    // 是组件 会在 createComponent 里 返回false
     if (createComponent(vnode, insertedVnodeQueue, parentElm, refElm)) {
       return
     }
@@ -163,6 +167,7 @@ export function createPatchFunction (backend) {
         }
       }
 
+      // !!! component 开始创建 真实dom。 nodeOps是dom操作包
       vnode.elm = vnode.ns
         ? nodeOps.createElementNS(vnode.ns, tag)
         : nodeOps.createElement(tag, vnode)
@@ -188,16 +193,20 @@ export function createPatchFunction (backend) {
           insert(parentElm, vnode.elm, refElm)
         }
       } else {
+        // 创建孩子节点
+        // 判断有无data数据 有的话调用 invokeCreateHooks 处理节点属性
         createChildren(vnode, children, insertedVnodeQueue)
         if (isDef(data)) {
           invokeCreateHooks(vnode, insertedVnodeQueue)
         }
+        // 把这个节点插入到父节点
         insert(parentElm, vnode.elm, refElm)
       }
 
       if (process.env.NODE_ENV !== 'production' && data && data.pre) {
         creatingElmInVPre--
       }
+    // 注释节点 文本节点 处理
     } else if (isTrue(vnode.isComment)) {
       vnode.elm = nodeOps.createComment(vnode.text)
       insert(parentElm, vnode.elm, refElm)
@@ -302,6 +311,7 @@ export function createPatchFunction (backend) {
   }
 
   function invokeCreateHooks (vnode, insertedVnodeQueue) {
+    // 遍历cbs.create 依次执行里面处理节点属性的方法
     for (let i = 0; i < cbs.create.length; ++i) {
       cbs.create[i](emptyNode, vnode)
     }
@@ -344,6 +354,7 @@ export function createPatchFunction (backend) {
     }
   }
 
+  // 触发destory钩子
   function invokeDestroyHook (vnode) {
     let i, j
     const data = vnode.data
@@ -539,6 +550,7 @@ export function createPatchFunction (backend) {
       return
     }
 
+    // !!!props 组件在这里开始处理从父组件获取的数据，更新props
     let i
     const data = vnode.data
     if (isDef(data) && isDef(i = data.hook) && isDef(i = i.prepatch)) {
@@ -697,15 +709,24 @@ export function createPatchFunction (backend) {
     }
   }
 
+  // !!!9 patch开始
+
+  // 1 首先 vnode（新 VNode 节点）不存在的时候，直接return 并触发销毁 (Destroy) 钩子
+  // 2 oldVnode（老VNode节点）不存在，相当于新的VNode替代原本没有的节点，所以直接 createElm。
+  // 3 判断旧vnode不是原生标签 判断新旧vnode相同，就去比较 patchVnode
+  // 4 如果是原生标签或者新旧Vnode不同 就创建一个空node 代替旧vnode，通过createElm创建一个Element 插入到旧Vnode 的位置
+
   return function patch (oldVnode, vnode, hydrating, removeOnly) {
+    // 1 如果没有新vnode直接 说明组件被销毁
     if (isUndef(vnode)) {
-      if (isDef(oldVnode)) invokeDestroyHook(oldVnode)
+      if (isDef(oldVnode)) invokeDestroyHook(oldVnode) // 触发destory钩子
       return
     }
 
     let isInitialPatch = false
     const insertedVnodeQueue = []
 
+    // 2 如果没有旧vnode 说明是新增组件
     if (isUndef(oldVnode)) {
       // empty mount (likely as component), create new root element
       isInitialPatch = true
@@ -713,7 +734,7 @@ export function createPatchFunction (backend) {
     } else {
       const isRealElement = isDef(oldVnode.nodeType)
       if (!isRealElement && sameVnode(oldVnode, vnode)) {
-        // patch existing root node
+        // 3 patch existing root node
         patchVnode(oldVnode, vnode, insertedVnodeQueue, null, null, removeOnly)
       } else {
         if (isRealElement) {
@@ -740,6 +761,7 @@ export function createPatchFunction (backend) {
           }
           // either not server-rendered, or hydration failed.
           // create an empty node and replace it
+          // 4 用空node代替 旧vnode
           oldVnode = emptyNodeAt(oldVnode)
         }
 
@@ -748,6 +770,8 @@ export function createPatchFunction (backend) {
         const parentElm = nodeOps.parentNode(oldElm)
 
         // create new node
+        // 4.1 创新新节点 设置好 父节点 兄弟节点
+        // !!!event 创建新节点的时候  会处理 节点的属性和事件 class style 等 
         createElm(
           vnode,
           insertedVnodeQueue,

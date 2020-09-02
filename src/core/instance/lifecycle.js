@@ -29,6 +29,8 @@ export function setActiveInstance(vm: Component) {
   }
 }
 
+// 初始化生命周期 加一些 生命周期标志
+// 还有$parent $root 。。。
 export function initLifecycle (vm: Component) {
   const options = vm.$options
 
@@ -55,6 +57,7 @@ export function initLifecycle (vm: Component) {
   vm._isBeingDestroyed = false
 }
 
+// 混入的时候添加一些方法
 export function lifecycleMixin (Vue: Class<Component>) {
   Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
     const vm: Component = this
@@ -139,7 +142,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
     }
   }
 }
-
+// 里面的updateComponent 传入到 Watcher 里面
 export function mountComponent (
   vm: Component,
   el: ?Element,
@@ -189,14 +192,14 @@ export function mountComponent (
     }
   } else {
     updateComponent = () => {
-      vm._update(vm._render(), hydrating)
+      vm._update(vm._render(), hydrating) // _render 主要用于生成vnode，
     }
   }
 
   // we set this to vm._watcher inside the watcher's constructor
   // since the watcher's initial patch may call $forceUpdate (e.g. inside child
   // component's mounted hook), which relies on vm._watcher being already defined
-  // 生成watcher 实例
+  //!!!8 生成watcher 实例
   new Watcher(vm, updateComponent, noop, {
     before () {
       if (vm._isMounted && !vm._isDestroyed) {
@@ -217,7 +220,7 @@ export function mountComponent (
   }
   return vm
 }
-
+// 更新子组件
 export function updateChildComponent (
   vm: Component,
   propsData: ?Object,
@@ -267,6 +270,7 @@ export function updateChildComponent (
   vm.$listeners = listeners || emptyObject
 
   // update props
+  // !!!props 更新子组件props
   if (propsData && vm.$options.props) {
     toggleObserving(false)
     const props = vm._props

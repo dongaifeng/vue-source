@@ -102,14 +102,18 @@ function remove (
   )
 }
 
+// !!!event 处理事件函数
 function updateDOMListeners (oldVnode: VNodeWithData, vnode: VNodeWithData) {
   if (isUndef(oldVnode.data.on) && isUndef(vnode.data.on)) {
     return
   }
+  // 拿到 本节点 的 新旧 事件对象 on
   const on = vnode.data.on || {}
   const oldOn = oldVnode.data.on || {}
   target = vnode.elm
+  // 规范一下事件回调函数
   normalizeEvents(on)
+  // 更新 处理 事件
   updateListeners(on, oldOn, add, remove, createOnceHandler, vnode.context)
   target = undefined
 }

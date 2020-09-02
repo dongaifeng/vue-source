@@ -25,6 +25,7 @@ const weexFactoryPlugin = {
   }
 }
 
+// 这里是别名设置 可以看一下
 const aliases = require('./alias')
 const resolve = p => {
   const base = p.split('/')[0]
@@ -119,6 +120,10 @@ const builds = {
     env: 'production',
     banner
   },
+
+// 搜索 web-full-dev  找到 对应的配置
+// 这个配置会在 genConfig 函数中用到
+
   // Runtime+compiler development build (Browser)
   'web-full-dev': {
     entry: resolve('web/entry-runtime-with-compiler.js'),
@@ -264,6 +269,8 @@ function genConfig (name) {
 }
 
 if (process.env.TARGET) {
+
+  // 从这里就可以看到 是通过传参获取对应的config
   module.exports = genConfig(process.env.TARGET)
 } else {
   exports.getBuild = genConfig
